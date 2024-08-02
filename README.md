@@ -4,7 +4,7 @@ A Space Invaders Remix created for webDevOpen
 
 
 
-**Title:**
+##Title:
 
 Space Invaders Tournament Title
 
