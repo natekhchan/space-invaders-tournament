@@ -2,6 +2,13 @@
 <img src="https://imgur.com/XOS1Vdh.png"  width="150px" height="150px">
 A Space Invaders Remix created for webDevOpen
 
+Title:
+
+Space Invaders Tournament Title
+
+![SpaceInvadersTitle](https://github.com/natekhchan/space-invaders-tournament/blob/main/SpaceInvadersTournamentTitle.png)
+
+
 # Project 1 | Space Invaders Tournament
 
 ## The Game
