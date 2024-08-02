@@ -18,6 +18,6 @@ https://www.classicgaming.cc/classics/space-invaders/play-guide
 
 ## Presentation
 
-xfun::embed_file("homework.pdf")
+<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vQWptyeX7214dq-c0urFLkF8gETFvie-hD4oyT--bGh9N-gO1NCeVCeRaewa-eXoRLg4Xbcfc1SAsia/embed?start=true&loop=true&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
 
 ## Conclusion and Closing remarks
