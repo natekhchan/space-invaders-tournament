@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Invaders</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <canvas id="gameCanvas" width="1000" height="900"></canvas>
+    <div id="buttonContainer">
+        <img id="fullscreenButton" src="assets/icons/fullScreenIcon.png" alt="Fullscreen">
+        <img id="resetGameButton" src="assets/icons/resetIcon.png" alt="Reset Game">
+    </div>
+    <script src="js/canvas.js"></script>
+    <audio id="ufoSound" loop>
+        <source src="assets/sounds/ufo_lowpitch.wav" type="audio/wav">
+    </audio>
+    <audio id="playerGunSound">
+        <source src="assets/sounds/shoot.wav" loop="false" type="audio/wav">
+    </audio>
+    <audio id="explosionSound">
+        <source src="assets/sounds/explosion.wav" loop="false" type="audio/wav">
+    </audio>    
+    <!-- Background Music -->
+    <audio id="backgroundMusic" loop>
+      <source src="assets/sounds/phoenix.mp3" type="audio/mp3">
+      Your browser does not support the audio element.
+    </audio>
+
+  <!-- Game script -->
+  <script>
+    // Function to play background music
+    function playBackgroundMusic() {
+      var backgroundMusic = document.getElementById("backgroundMusic");
+      backgroundMusic.play().catch(function(error) {
+        console.log("Music play prevented:", error);
+      });
+    }
+
+    // Listen for the spacebar press to start the music
+    document.addEventListener('keydown', function(event) {
+      if (event.code === 'Space') {
+        playBackgroundMusic();
+        // Remove the event listener after the first press
+        document.removeEventListener('keydown', arguments.callee);
+      }
+    });
+  </script>
+
+</body>
+</html>

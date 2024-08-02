@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Space Invaders Game</title>
+  <link rel="stylesheet" href="css/splash.css">
+
+</head>
+<body>
+  <!-- Space Invaders Image -->
+  <img id="spaceInvadersImage" src="assets/spaceInvadersSplash.png" alt="Space Invaders">
+
+  <audio autoplay loop>
+    <source src="assets/sounds/pressStart.mp3" type="audio/mp3">
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- Start Button (as an image) -->
+  <button id="startButton">
+    <img src="assets/redStartButton.png" alt="Start Game">
+  </button>
+
+  <script>
+  
+    document.getElementById("startButton").addEventListener("click", function() {
+      // Navigate to game.html
+      window.location.href = "game.html";
+    });
+  </script>
+
+  <div class="instructions">  
+   <p>Press the left and right keys to move left and right.<br>Press space to fire gun.<br>Hold space to rapid fire.</p> 
+  </div>
+</body>
+</html>

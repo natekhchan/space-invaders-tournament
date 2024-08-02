@@ -1,0 +1,33 @@
+@font-face {
+    font-family: 'Arcade Normal';
+    src: url('../assets/fonts/ARCADE_N.TTF') format('truetype');
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: black;
+}
+
+canvas {
+    display: block;
+    background-color: #000;
+}
+
+#buttonContainer {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 10px; /* Space between the icons */
+}
+
+#buttonContainer img {
+    width: 40px; /* Adjust size as needed */
+    height: auto;
+    cursor: pointer;
+}

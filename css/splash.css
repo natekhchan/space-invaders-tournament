@@ -1,0 +1,46 @@
+@font-face {
+    font-family: 'Arcade Normal';
+    src: url('../assets/fonts/ARCADE_N.TTF') format('truetype');
+}
+
+/* Centering the image and button */
+body, html {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #000; /* Optional: Set a background color */
+}
+
+#startButton {
+  margin-top: 20px;
+}
+
+#startButton {
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0; /* Remove default padding */
+  }
+
+  #startButton img {
+    display: block; /* Remove extra space below the image */
+    width: 300px; /* Adjust the size as needed */
+    height: 100px;
+  }
+
+#spaceInvadersImage {
+  max-width: 80%; /* Adjust as needed */
+  height: auto;
+}
+
+.instructions {
+  color: white;
+  font-family: 'Arcade Normal';
+  font-size: 20px;
+  text-align: center;
+  margin-top: 20px;
+}
+

@@ -1,0 +1,732 @@
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+canvas.width = 1000;
+canvas.height = 900;
+
+function openFullscreen() {
+    if (canvas.requestFullscreen) {
+        canvas.requestFullscreen();
+    } else if (canvas.webkitRequestFullscreen) { // Safari
+        canvas.webkitRequestFullscreen();
+    } else if (canvas.msRequestFullscreen) { // IE11
+        canvas.msRequestFullscreen();
+    }
+}
+
+document.getElementById('fullscreenButton').addEventListener('click', openFullscreen);
+
+window.onload = function() {
+    // Get the audio element
+    var backgroundMusic = document.getElementById("backgroundMusic");
+
+    // Check if the audio element exists
+    if (backgroundMusic) {
+      // Play the music as soon as the page loads
+      backgroundMusic.play().catch(function(error) {
+        console.log("Music play prevented:", error);
+      });
+    } else {
+      console.error("Audio element with id 'backgroundMusic' not found.");
+    }
+  };
+class Player {
+    constructor() {
+        this.width = 50;
+        this.height = 30;
+        this.x = canvas.width / 2 - this.width / 2;
+        this.y = canvas.height - this.height - 10;
+        this.speed = 5;
+        this.image = new Image();
+        this.image.src = 'assets/player.png';
+        this.health = 3; // Player health
+        this.isDead = false; // New property to track if the player is dead
+        this.deathTime = 0; // Timestamp when the player died
+        this.explosionImage = new Image();
+        this.explosionImage.src = 'assets/explosion.gif'; // Explosion image
+        this.explosionSound = null; // Initialize as null
+
+        // Reference to the explosion sound after DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            this.explosionSound = document.getElementById('explosionSound');
+        });
+    }
+
+    draw() {
+        if (this.isDead) {
+            ctx.drawImage(this.explosionImage, this.x, this.y, this.width, this.height);
+        } else if (this.image.complete) {
+            ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        } else {
+            this.image.onload = () => {
+                ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            };
+        }
+    }
+
+    moveLeft() {
+        if (this.x > 0) {
+            this.x -= this.speed;
+        }
+    }
+
+    moveRight() {
+        if (this.x + this.width < canvas.width) {
+            this.x += this.speed;
+        }
+    }
+
+    takeDamage() {
+        this.health -= 1;
+        if (this.health <= 0) {
+            gameOver = true;
+            this.isDead = true;
+            this.deathTime = Date.now();
+            if (this.explosionSound) { // Check if explosionSound is not null
+                this.explosionSound.play(); // Play the explosion sound once
+            }
+        } else {
+            if (this.explosionSound) { // Check if explosionSound is not null
+                this.explosionSound.play(); // Play the explosion sound once
+            }
+        }
+    }
+
+    reset() {
+        this.isDead = false;
+    }
+}
+class Bullet {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 5;
+        this.height = 10;
+        this.speed = 7;
+        this.color = 'red';
+    }
+
+    draw() {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+
+    update() {
+        this.y -= this.speed;
+    }
+}
+
+class AlienBullet {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 5;
+        this.height = 10;
+        this.speed = 0.5;
+        this.color = 'yellow';
+    }
+
+    draw() {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+
+    update() {
+        this.y += this.speed;
+    }
+}
+
+class Enemy {
+    constructor(x, y, imageSources, speed, row) {
+        this.x = x;
+        this.y = y;
+        this.width = 40;
+        this.height = 30;
+        this.speed = speed;
+        this.direction = 1; // 1 for right, -1 for left
+        this.images = imageSources.map(src => {
+            const img = new Image();
+            img.src = src;
+            return img;
+        });
+        this.currentFrame = 0;
+        this.frameCount = this.images.length;
+        this.frameDelay = 200; // Milliseconds between frames
+        this.lastFrameChange = Date.now();
+        this.shootingInterval = Math.random() * 10000 + 5000; // Random interval between 5 and 15 seconds
+        this.lastShot = Date.now() - Math.random() * 10000; // Random delay before first shot
+        this.row = row; // New property to track the row of the alien
+        // New property to track if the enemy is dead
+        this.isDead = false;
+        // Timestamp when the enemy died
+        this.deathTime = 0;
+        // Explosion image for aliens
+        this.explosionImage = new Image();
+        this.explosionImage.src = 'assets/invaderkilled.gif'; // Invader explosion image
+    }
+
+    draw() {
+        if (this.isDead) {
+            ctx.drawImage(this.explosionImage, this.x, this.y, this.width, this.height);
+        } else {
+            const currentTime = Date.now();
+            if (currentTime - this.lastFrameChange > this.frameDelay) {
+                this.currentFrame = (this.currentFrame + 1) % this.frameCount;
+                this.lastFrameChange = currentTime;
+            }
+            const image = this.images[this.currentFrame];
+            ctx.drawImage(image, this.x, this.y, this.width, this.height);
+        }
+    }
+
+    update() {
+        if (!this.isDead) {
+            this.x += this.speed * this.direction;
+        }
+    }
+
+    shoot() {
+        const currentTime = Date.now();
+        if (!this.isDead && currentTime - this.lastShot > this.shootingInterval) {
+            alienBullets.push(new AlienBullet(this.x + this.width / 2 - 2.5, this.y + this.height));
+            this.lastShot = currentTime;
+            this.shootingInterval = Math.random() * 3000 + 2000; // Random interval for the next shot
+        }
+    }
+
+    takeDamage() {
+        this.isDead = true;
+        this.deathTime = Date.now();
+        setTimeout(() => {
+            this.isDead = false;
+        }, 200); // Reset after 200 milliseconds
+    }
+}
+class DefensiveBase {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 60;
+        this.height = 40;
+        this.hp = 100; // Initial HP
+        this.color = 'green';
+        this.destroyed = false;
+    }
+
+    draw() {
+        if (this.destroyed) return; // Draw base
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+
+        // Draw HP bar
+        const hpBarWidth = this.width - 2; // Leave a small border
+        const hpBarHeight = 5;
+        const hpBarX = this.x + 1; // Small offset for border
+        const hpBarY = this.y + this.height - hpBarHeight - 1; // Position below base
+
+        // Calculate the width of the filled part of the HP bar
+        const filledWidth = (this.hp / 100) * hpBarWidth;
+
+        // Draw the outline of the HP bar
+        ctx.strokeStyle = 'black';
+        ctx.strokeRect(hpBarX, hpBarY, hpBarWidth, hpBarHeight);
+
+        // Draw the filled part of the HP bar
+        ctx.fillStyle = 'green';
+        ctx.fillRect(hpBarX, hpBarY, filledWidth, hpBarHeight);
+
+        // Draw the remaining part of the HP bar
+        ctx.fillStyle = 'red';
+        ctx.fillRect(hpBarX + filledWidth, hpBarY, hpBarWidth - filledWidth, hpBarHeight);
+    }
+
+    takeDamage(amount) {
+        this.hp -= amount;
+        if (this.hp <= 0) {
+            this.destroyed = true;
+            // Play explosion sound when the base is destroyed
+            const explosionSound = document.getElementById('explosionSound');
+            explosionSound.play();
+        }
+    }
+
+    isPointInside(x, y) {
+        return x >= this.x && x < this.x + this.width && y >= this.y && y < this.y + this.height;
+    }
+}
+
+
+class Explosion {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 10;
+        this.height = 10;
+        this.color = 'orange';
+        this.duration = 100; // Duration in milliseconds
+        this.startTime = Date.now();
+    }
+
+    draw() {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+
+    update() {
+        if (Date.now() - this.startTime > this.duration) {
+            return false; // Explosion has ended
+        }
+        return true; // Explosion is still active
+    }
+}
+
+class UFO {
+    constructor() {
+        this.width = 60;
+        this.height = 30;
+        this.x = -this.width;
+        this.y = 50;
+        this.speed = 3;
+        this.image = new Image();
+        this.image.src = 'assets/ufo.png';
+        this.explosionImage = new Image();
+        this.explosionImage.src = 'assets/explosion.gif'; // Explosion image
+        this.isDead = false;
+        this.deathTime = 0;
+        this.explosionSound = null; // Initialize as null
+
+        // Reference to the explosion sound after DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            this.explosionSound = document.getElementById('ufoExplosionSound');
+        });
+    }
+
+    draw() {
+        if (this.isDead) {
+            ctx.drawImage(this.explosionImage, this.x, this.y, this.width, this.height);
+        } else {
+            ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        }
+    }
+
+    update() {
+        this.x += this.speed;
+        if (this.x > canvas.width) {
+            console.log("UFO moved off screen");
+            this.isDead = true;
+            this.deathTime = Date.now();
+            if (this.explosionSound) { // Check if explosionSound is not null
+                this.explosionSound.play(); // Play the explosion sound when the UFO is destroyed
+            }
+            setTimeout(() => {
+                this.isDead = false;
+            }, 400); // Reset after 400 milliseconds
+        }
+    }
+}
+
+
+let player;
+let bullets;
+let alienBullets;
+let enemies;
+let defensiveBases;
+let explosions;
+let score;
+let gameOver;
+let moveDown;
+let level; // Added level tracking
+let ufo;
+let ufoSpawnTime;
+const moveDownSpeed = 20; // Speed at which enemies move down
+let gameLoopId;
+
+
+// Init game
+function initializeGame() {
+    player = new Player();
+    bullets = [];
+    alienBullets = [];
+    enemies = [];
+    defensiveBases = [];
+    explosions = [];
+    score = 0;
+    level = 1; // Starting level
+    gameOver = false;
+    moveDown = false;
+    ufo = null;
+    ufoSpawnTime = Date.now() + Math.random() * 10000 + 20000; // Random time between 20 and 30 seconds
+    createDefensiveBases();
+    spawnEnemies();
+
+}
+
+function startNewLevel() {
+    if (level >= 5) {
+        gameOver = true;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'green';
+        ctx.font = '40px Arcade Normal';
+        ctx.fillText('Congrats. You win RDY PLYR ONE!', canvas.width / 2 - 250, canvas.height / 2);
+        return;
+    }
+    // Increase level
+    level++;
+    // Recreate defensive bases
+    defensiveBases = [];
+    createDefensiveBases();
+    // Respawn enemies with increased speed
+    spawnEnemies();
+    // Reset necessary variables
+    bullets = [];
+    alienBullets = [];
+    ufo = null;
+    ufoSound.pause();
+    ufoSound.currentTime = 0;
+    ufoSpawnTime = Date.now() + Math.random() * 10000 + 20000; // Random time between 20 and 30 seconds
+}
+
+// Function to update and draw the game
+function gameLoop() {
+    if (!gameOver) {
+        updateGame();
+        drawGame();
+        gameLoopId = requestAnimationFrame(gameLoop); // Save the ID for control
+    }
+}
+
+// Function to reset the game
+function resetGame() {
+    // Stop the current game loop
+    if (gameLoopId) {
+        cancelAnimationFrame(gameLoopId);
+    }
+
+    // Reinitialize the game state
+    initializeGame();
+
+    // Start the game loop again
+    gameLoop();
+}
+
+// Attach event listener to the reset button
+document.getElementById('resetGameButton').addEventListener('click', resetGame);
+
+function spawnEnemies() {
+    const rows = [
+        ['assets/yellow.png'],
+        ['assets/green.png'],
+        ['assets/alien1-row34.png', 'assets/alien2-row34.png', 'assets/alien3-row34.png', 'assets/alien4-row34.png', 'assets/alien5-row34.png', 'assets/alien6-row34.png', 'assets/alien7-row34.png', 'assets/alien8-row34.png', 'assets/alien9-row34.png', 'assets/alien10-row34.png', 'assets/alien11-row34.png', 'assets/alien12-row34.png'],
+        ['assets/alien1-row34.png', 'assets/alien2-row34.png', 'assets/alien3-row34.png', 'assets/alien4-row34.png', 'assets/alien5-row34.png', 'assets/alien6-row34.png', 'assets/alien7-row34.png', 'assets/alien8-row34.png', 'assets/alien9-row34.png', 'assets/alien10-row34.png', 'assets/alien11-row34.png', 'assets/alien12-row34.png'],
+        ['assets/alien1-row34.png', 'assets/alien2-row34.png', 'assets/alien3-row34.png', 'assets/alien4-row34.png', 'assets/alien5-row34.png', 'assets/alien6-row34.png', 'assets/alien7-row34.png', 'assets/alien8-row34.png', 'assets/alien9-row34.png', 'assets/alien10-row34.png', 'assets/alien11-row34.png', 'assets/alien12-row34.png'],
+    ];
+
+    for (let j = 0; j < rows.length; j++) {
+        for (let i = 0; i < 11; i++) {
+            const x = i * 60 + 30;
+            const y = j * 40 + 30;
+            enemies.push(new Enemy(x, y, rows[j], 1 + level * 0.5, j)); // Pass the row index
+        }
+    }
+}
+
+function createDefensiveBases() {
+    const baseY = canvas.height - 150;
+    const spacing = canvas.width / 5;
+    for (let i = 1; i <= 4; i++) {
+        defensiveBases.push(new DefensiveBase(i * spacing - 30, baseY));
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const ufoSound = document.getElementById('ufoSound');
+});
+
+function updateGame() {
+    if (gameOver) return;
+
+    // Update player bullets
+    bullets.forEach((bullet, index) => {
+        if (bullet) { // Add null check
+            bullet.update();
+            if (bullet.y < 0) {
+                bullets.splice(index, 1);
+            }
+            // Check for collision with defensive bases
+            for (let i = defensiveBases.length - 1; i >= 0; i--) {
+                const base = defensiveBases[i];
+                if (base && !base.destroyed && base.isPointInside(bullet.x, bullet.y)) {
+                    base.takeDamage(10);
+                    bullets.splice(index, 1);
+                    explosions.push(new Explosion(bullet.x, bullet.y));
+                    break;
+                }
+            }
+            // Check for collision with enemies
+            for (let eIndex = enemies.length - 1; eIndex >= 0; eIndex--) {
+                const enemy = enemies[eIndex];
+                if (enemy && bullet.x < enemy.x + enemy.width && bullet.x + bullet.width > enemy.x && bullet.y < enemy.y + enemy.height && bullet.y + bullet.height > enemy.y) {
+                    enemies[eIndex].takeDamage();
+                    setTimeout(() => {
+                        enemies.splice(eIndex, 1);
+                    }, 200);
+                    bullets.splice(index, 1);
+                    // Add points based on the row of the alien
+                    if (enemy.row === 0) {
+                        score += 30;
+                    } else if (enemy.row === 1) {
+                        score += 20;
+                    } else if (enemy.row >= 2 && enemy.row <= 4) {
+                        score += 10;
+                    }
+                    break;
+                }
+            }
+        }
+    });
+
+    // Update alien bullets
+    alienBullets.forEach((bullet, index) => {
+        if (bullet) { // Add null check
+            bullet.update();
+            if (bullet.y > canvas.height) {
+                alienBullets.splice(index, 1);
+            }
+            // Check for collision with defensive bases
+            for (let i = defensiveBases.length - 1; i >= 0; i--) {
+                const base = defensiveBases[i];
+                if (base && !base.destroyed && base.isPointInside(bullet.x, bullet.y)) {
+                    base.takeDamage(10);
+                    alienBullets.splice(index, 1);
+                    explosions.push(new Explosion(bullet.x, bullet.y));
+                    break;
+                }
+            }
+            // Check for collision with player
+            if (bullet.x < player.x + player.width && bullet.x + bullet.width > player.x && bullet.y < player.y + player.height && bullet.y + player.height > player.y) {
+                player.takeDamage();
+                alienBullets.splice(index, 1);
+                player.isDead = true;
+                setTimeout(() => {
+                    player.reset();
+                }, 200);
+            }
+        }
+    });
+
+    // Update enemies
+    for (let eIndex = enemies.length - 1; eIndex >= 0; eIndex--) {
+        const enemy = enemies[eIndex];
+        if (enemy) { // Add null check
+            enemy.update();
+            enemy.shoot();
+            if (enemy.x + enemy.width >= canvas.width || enemy.x <= 0) {
+                moveDown = true;
+            }
+            if (enemy.y + enemy.height > canvas.height) {
+                gameOver = true;
+            }
+            // Check for collision with bullets
+            for (let bIndex = bullets.length - 1; bIndex >= 0; bIndex--) {
+                const bullet = bullets[bIndex];
+                if (bullet && bullet.x < enemy.x + enemy.width && bullet.x + bullet.width > enemy.x && bullet.y < enemy.y + enemy.height && bullet.y + bullet.height > enemy.y) {
+                    enemies[eIndex].takeDamage();
+                    setTimeout(() => {
+                        enemies.splice(eIndex, 1);
+                    }, 200);
+                    bullets.splice(bIndex, 1);
+                    // Add points based on the row of the alien
+                    if (enemy.row === 0) {
+                        score += 30;
+                    } else if (enemy.row === 1) {
+                        score += 20;
+                    } else if (enemy.row >= 2 && enemy.row <= 4) {
+                        score += 10;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    // Move enemies down if necessary
+    if (moveDown) {
+        enemies.forEach(enemy => {
+            if (enemy) { // Add null check
+                enemy.y += moveDownSpeed;
+                enemy.direction *= -1;
+            }
+        });
+        moveDown = false;
+    }
+
+    // Check if all enemies are cleared
+    if (enemies.length === 0) {
+        startNewLevel();
+    }
+
+    // Update UFO if it exists
+    if (ufo) {
+        ufo.update();
+        if (ufo.x > canvas.width) {
+            console.log("UFO moved off screen");
+            ufo = null;
+            ufoSound.pause();
+            ufoSound.currentTime = 0;
+        } else {
+            if (ufo.isDead) {
+                ufoSound.pause();
+                ufoSound.currentTime = 0;
+                ufo = null;
+                const explosionSound = document.getElementById('ufoExplosionSound');
+                if (explosionSound) { // Check if explosionSound is not null
+                    explosionSound.play(); // Play the explosion sound when the UFO is destroyed
+                }
+                setTimeout(() => {
+                    ufo = null; // Remove UFO after explosion
+                }, 400); // Remove UFO after explosion
+            } else if (ufoSound.paused) {
+                ufoSound.play(); // Play the UFO sound
+            }
+            // Check for collision with player bullets
+            bullets.forEach((bullet, index) => {
+                if (bullet && ufo && bullet.x < ufo.x + ufo.width && bullet.x + bullet.width > ufo.x && bullet.y < ufo.y + ufo.height && bullet.y + bullet.height > ufo.y) {
+                    score += 50; // Increase score for shooting down the UFO
+                    console.log("UFO hit by bullet at: ", bullet.x, bullet.y);
+                    ufo.isDead = true;
+                    ufo.deathTime = Date.now();
+                    ufoSound.pause(); // Stop the sound immediately when the UFO is hit
+                    ufoSound.currentTime = 0; // Reset sound to the beginning
+                    const explosionSound = document.getElementById('ufoExplosionSound');
+                    if (explosionSound) { // Check if explosionSound is not null
+                        explosionSound.play(); // Play the explosion sound when the UFO is destroyed
+                    }
+                    setTimeout(() => {
+                        ufo = null; // Remove UFO after explosion
+                    }, 400); // Remove UFO after explosion
+                    bullets.splice(index, 1); // Remove bullet
+                }
+            });
+        }
+    }
+
+    // Spawn UFO at random intervals
+    if (!ufo && Date.now() > ufoSpawnTime) {
+        ufo = new UFO();
+        ufoSound.play();
+        ufoSpawnTime = Date.now() + Math.random() * 10000 + 20000; // Random time between 20 and 30 seconds
+    }
+
+    // Update explosions
+    explosions.forEach((explosion, eIndex) => {
+        if (explosion && !explosion.update()) {
+            explosions.splice(eIndex, 1);
+        }
+    });
+}
+
+function drawGame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (gameOver) {
+        if (level >= 5) {
+            ctx.fillStyle = '#33CC33'; // Hex color for Neon Green
+            ctx.font = '40px Arcade Normal';
+            ctx.fillText('Congrats RDY PLYR ONE!', canvas.width / 2 - 400, canvas.height / 2);
+            // Display score, lives, and level
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arcade Normal';
+            ctx.fillText(`Score: ${score}`, 10, 20);
+            ctx.fillText(`LIVES: ${player.health}`, canvas.width - 250, 20);
+            ctx.fillText(`LEVEL: ${level}`, canvas.width / 2 - 50, 20);
+            // Save score to local storage
+            saveScore();
+            displayScores();
+        } else {
+            ctx.fillStyle = 'red';
+            ctx.font = '50px Arcade Normal';
+            ctx.fillText('Game Over', canvas.width / 2 - 150, canvas.height / 2);
+            // Save score to local storage
+            saveScore();
+            displayScores();
+        }
+        return; // Exit the function if the game is over
+    }
+
+    player.draw();
+    bullets.forEach(bullet => bullet.draw());
+    alienBullets.forEach(bullet => bullet.draw());
+    enemies.forEach(enemy => enemy.draw());
+    defensiveBases.forEach(base => base.draw());
+    explosions.forEach(explosion => explosion.draw());
+
+    if (ufo) {
+        ufo.draw();
+    }
+
+    ctx.fillStyle = 'white';
+    ctx.font = '20px Arcade Normal';
+    ctx.fillText(`Score: ${score}`, 10, 20);
+    ctx.fillText(`LIVES: ${player.health}`, canvas.width - 250, 20);
+    ctx.fillText(`LEVEL: ${level}`, canvas.width / 2 - 50, 20);
+}
+
+// Save Score function
+function saveScore() {
+    const storedScores = localStorage.getItem('scores');
+    let scores = storedScores ? JSON.parse(storedScores) : [];
+    
+    scores.push(score);
+    
+    localStorage.setItem('scores', JSON.stringify(scores));
+}
+
+// Display Scores function
+function displayScores() {
+    const storedScores = localStorage.getItem('scores');
+    let scores = storedScores ? JSON.parse(storedScores) : [];
+    
+    scores.sort((a, b) => b - a); // Sort scores in descending order
+    
+    ctx.fillStyle = 'white';
+    ctx.font = '20px Arcade Normal';
+    
+    let y = canvas.height / 2 + 50;
+    
+    ctx.fillText('Hi Score:', canvas.width / 2 - 100, y);
+    y += 30;
+    
+    for (let i = 0; i < Math.min(scores.length, 10); i++) { // Display top 10 scores
+        ctx.fillText(`Score ${i + 1}: ${scores[i]}`, canvas.width / 2 - 100, y);
+        y += 30;
+    }
+}
+
+// Get a reference to the playerGunSound audio element
+document.addEventListener('DOMContentLoaded', () => {
+    const playerGunSound = document.getElementById('playerGunSound');
+});
+
+// Add event listener for key press
+document.addEventListener('keydown', (e) => {
+    if (gameOver) return; // Return if the game is over
+
+    if (e.key === 'ArrowLeft') {
+        player.moveLeft();
+    } else if (e.key === 'ArrowRight') {
+        player.moveRight();
+    } else if (e.key === ' ') {
+        bullets.push(new Bullet(player.x + player.width / 2 - 2.5, player.y));
+        const playerGunSound = document.getElementById('playerGunSound');
+        playerGunSound.play(); // Play the shoot sound when the bullet is fired
+        playerGunSound.onended = () => {
+            // Stop the sound after it ends
+            playerGunSound.pause();
+            playerGunSound.currentTime = 0;
+        };
+    }
+});
+
+// Initialize and start the game
+initializeGame();
+gameLoop();
