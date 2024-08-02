@@ -2,7 +2,9 @@
 <img src="https://imgur.com/XOS1Vdh.png"  width="150px" height="150px">
 A Space Invaders Remix created for webDevOpen
 
-Title:
+
+
+**Title:**
 
 Space Invaders Tournament Title
 
