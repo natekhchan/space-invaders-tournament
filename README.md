@@ -18,6 +18,8 @@ https://www.classicgaming.cc/classics/space-invaders/play-guide
 
 ## Presentation
 
-<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vQWptyeX7214dq-c0urFLkF8gETFvie-hD4oyT--bGh9N-gO1NCeVCeRaewa-eXoRLg4Xbcfc1SAsia/embed?start=true&loop=true&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+https://github.com/natekhchan/space-invaders-tournament/blob/main/Space%20Invaders%20Tournament%20Presentation.pdf
 
 ## Conclusion and Closing remarks
+
+I had an absolutely fun experience programming this game with 732 lines of logic embedded inside pure Javascript.  Have fun playing!
