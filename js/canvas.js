@@ -1,7 +1,10 @@
-const canvas = document.getElementById('gameCanvas');
+// Original Game by Taito -- Space Invaders
+// Remake by Nathan Chan
+
+const canvas = document.getElementById('gameCanvas');  // Define game using canvas
 const ctx = canvas.getContext('2d');
 
-canvas.width = 1000;
+canvas.width = 1000;              // Define the size of the canvas
 canvas.height = 900;
 
 function openFullscreen() {
@@ -30,7 +33,7 @@ window.onload = function() {
       console.error("Audio element with id 'backgroundMusic' not found.");
     }
   };
-class Player {
+class Player { // Define player object
     constructor() {
         this.width = 50;
         this.height = 30;
@@ -64,13 +67,13 @@ class Player {
         }
     }
 
-    moveLeft() {
+    moveLeft() { // move player left
         if (this.x > 0) {
             this.x -= this.speed;
         }
     }
 
-    moveRight() {
+    moveRight() { // move player right
         if (this.x + this.width < canvas.width) {
             this.x += this.speed;
         }
@@ -78,7 +81,7 @@ class Player {
 
     takeDamage() {
         this.health -= 1;
-        if (this.health <= 0) {
+        if (this.health <= 0) { // If health is below or equal to 0, automatically game over.
             gameOver = true;
             this.isDead = true;
             this.deathTime = Date.now();
@@ -96,7 +99,7 @@ class Player {
         this.isDead = false;
     }
 }
-class Bullet {
+class Bullet {     // Define Bullet object
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -116,7 +119,7 @@ class Bullet {
     }
 }
 
-class AlienBullet {
+class AlienBullet { // Define Alien Bullet Object
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -136,7 +139,7 @@ class AlienBullet {
     }
 }
 
-class Enemy {
+class Enemy {               // Define Enemy object
     constructor(x, y, imageSources, speed, row) {
         this.x = x;
         this.y = y;
@@ -185,7 +188,7 @@ class Enemy {
         }
     }
 
-    shoot() {
+    shoot() { // Add shoot method to the Enemy class
         const currentTime = Date.now();
         if (!this.isDead && currentTime - this.lastShot > this.shootingInterval) {
             alienBullets.push(new AlienBullet(this.x + this.width / 2 - 2.5, this.y + this.height));
@@ -194,7 +197,7 @@ class Enemy {
         }
     }
 
-    takeDamage() {
+    takeDamage() { // Add takeDamage method to the Enemy class
         this.isDead = true;
         this.deathTime = Date.now();
         setTimeout(() => {
@@ -202,7 +205,7 @@ class Enemy {
         }, 200); // Reset after 200 milliseconds
     }
 }
-class DefensiveBase {
+class DefensiveBase { // Define Defensive Base object
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -240,7 +243,7 @@ class DefensiveBase {
         ctx.fillRect(hpBarX + filledWidth, hpBarY, hpBarWidth - filledWidth, hpBarHeight);
     }
 
-    takeDamage(amount) {
+    takeDamage(amount) {     // Add takeDamage method to the DefensiveBase class
         this.hp -= amount;
         if (this.hp <= 0) {
             this.destroyed = true;
@@ -256,7 +259,7 @@ class DefensiveBase {
 }
 
 
-class Explosion {
+class Explosion {      // Define Explosion object
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -280,7 +283,7 @@ class Explosion {
     }
 }
 
-class UFO {
+class UFO {     // Define UFO object
     constructor() {
         this.width = 60;
         this.height = 30;
@@ -326,6 +329,8 @@ class UFO {
 }
 
 
+// Define global variables
+
 let player;
 let bullets;
 let alienBullets;
@@ -361,8 +366,10 @@ function initializeGame() {
 
 }
 
+// Function to start a new level
+
 function startNewLevel() {
-    if (level >= 5) {
+    if (level >= 5) {      // When player completes and beats game
         gameOver = true;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = 'green';
@@ -412,7 +419,7 @@ function resetGame() {
 // Attach event listener to the reset button
 document.getElementById('resetGameButton').addEventListener('click', resetGame);
 
-function spawnEnemies() {
+function spawnEnemies() {            // spawns Alien enemies 5 x 11 grid structure
     const rows = [
         ['assets/yellow.png'],
         ['assets/green.png'],
@@ -430,6 +437,8 @@ function spawnEnemies() {
     }
 }
 
+// Create four defensive bases on the bottom of the screen
+
 function createDefensiveBases() {
     const baseY = canvas.height - 150;
     const spacing = canvas.width / 5;
@@ -441,6 +450,8 @@ function createDefensiveBases() {
 document.addEventListener('DOMContentLoaded', () => {
     const ufoSound = document.getElementById('ufoSound');
 });
+
+// Function to update the game state
 
 function updateGame() {
     if (gameOver) return;
@@ -628,6 +639,8 @@ function updateGame() {
 function drawGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Game Over if statements again
+
     if (gameOver) {
         if (level >= 5) {
             ctx.fillStyle = '#33CC33'; // Hex color for Neon Green
@@ -706,6 +719,8 @@ function displayScores() {
 document.addEventListener('DOMContentLoaded', () => {
     const playerGunSound = document.getElementById('playerGunSound');
 });
+
+// Definition for the keydown event listener including the space bar for shooting
 
 // Add event listener for key press
 document.addEventListener('keydown', (e) => {
